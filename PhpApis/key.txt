@@ -1,0 +1,7 @@
+Transaction URL : https://securegw-stage.paytm.in/theia/processTransaction 
+     •  Transaction Status URL :https://securegw-stage.paytm.in/order/status
+     •  MID - otjVEx52359125695001       
+     •  Merchant KEY - s6IGGfvrh#w@t41W      
+     •  Website (For web) : WEBSTAGING
+     •  Channel id: (For web) : WEB
+     •  Industry type id: Retail

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>LUDO DEV</title>
+	<link href="css/bootstrap.css" rel="stylesheet" media="screen">
+        <script src="js/jquery.min.js"></script>
+        <script src="js/socket_io2.2.0.js"></script>
+</head>
+<body>
+	<div class="container-fluid">
+			<div class="jumbotron text-center">
+				<p id="timerName"></p>
+					<h1 id="timmer"></h1>	
+					<span id="dice" style="display:none;"> 
+							<input type="text" class="form-control"  id="diceNum" autocomplete="off" placeholder="Dice" value='6'> <button style="background-color:green;color:white;height:80px;width:80px;font-size: 40px" onclick="diceRoll()"id="diceResult"> 0</button>
+							<h3>Dice Result</h3>
+					</span>
+					
+									
+			</div>
+	
+			<div class="col-md-3">&nbsp;</div>
+			<div class="col-md-2 jRoom" >
+					<div class="form-group ">
+						<label for="usr">Table Id:</label>
+						<input type="text" class="form-control"  id="tableId" autocomplete="off" placeholder="Enter tableId" value='1'>
+					</div>
+				</div>
+			
+			<div class="col-md-2 jRoom" >
+				<div class="form-group">
+					<label for="sel1">Select Players:</label>
+					<select class="form-control" id="players">
+						<option value="2">2</option>
+							<option value="4">4</option>
+					</select>
+			    </div>
+			</div>
+			<div class="col-md-2 jRoom" >
+				<div class="form-group">
+					<label for="sel1">Game Mode:</label>
+					<select class="form-control" id="gameMode">
+						<option value="Quick">Quick</option>
+							<option value="Classic">Classic</option>
+					</select>
+			    </div>
+			</div>
+			<div class="col-md-2 jRoom" >
+					<div class="form-group ">
+						<label for="usr">User Id:</label>
+						<input type="text" class="form-control"  id="userId" autocomplete="off" placeholder="Enter user id">
+					</div>
+				</div>
+			<div class="col-md-3">&nbsp;</div>
+			<div class="jRoom">
+				<label for="usr"> </label>				
+				<button onclick="joinRoom()" class="btn btn-primary btn-sm" >Join Room</button>
+				<input type="text" class="form-control"  id="privateId" autocomplete="off" placeholder="Enter tableId" value=''>
+				<select class="form-control" id="isFree">
+						<option value="Yes">Yes</option>
+							<option value="No">No</option>
+					</select>
+				<button onclick="joinPrivateRoom()" class="btn btn-primary btn-sm" >joinPrivateRoom</button>
+			</div>
+			<div class="col-md-3">&nbsp;</div>
+			<div class="jRoom">
+				<label for="usr"> </label>				
+				<button onclick="createPrivateRoom()" class="btn btn-primary btn-sm" >createPrivateRoom</button>
+				<button onclick="getPrivateRoomDetails()" class="btn btn-primary btn-sm" >getPrivateRoomDetails</button>
+			</div>
+	
+		
+		
+			
+			<table class="table">					
+				<tbody id="tr2Name">					 
+				</tbody>
+			</table>
+			<br/>
+			<div id="counter" class="text-center"></div>
+			<br/>
+			<div id="betUpdate" class="text-center"></div>
+			<br/>
+
+		</div>
+			
+</body>
+<script type="text/javascript">
+	var socket = io.connect('http://ludopower.com:3001/');
+
+	socket.on('connect',function(){
+		console.log('connected')
+	});
+	var tableId=false;
+	function diceRoll(){
+		//alert("hii")
+		var isTest = 'Yes';
+		var diceNum=$("#diceNum").val();
+		var data={
+			isTest:isTest,
+			diceNumber:diceNum
+		}		
+		socket.emit("diceRoll",data);
+	}
+	function createPrivateRoom(){
+		var isFree = $("#isFree").val();
+		var data={
+			players:'2',
+			gameMode:'Classic',
+			betValue:'100',
+			roomId:'5',
+			isFree:isFree
+		}		
+		socket.emit("createPrivateRoom",data);
+	}
+	socket.on("getPrivateRoomDetails",function(data){
+		console.log(data)
+		tableId = data.tableId;		
+	});
+	function getPrivateRoomDetails(){
+		var data={
+			tableId:tableId
+		}		
+		socket.emit("getPrivateRoomDetails",data);
+	}
+
+	function joinPrivateRoom(){
+		alert(tableId)
+		$("#div1").hide();
+		$("#div2").show();
+		var color = $("#color").val();
+		var type = $("#type").val();
+		var players = $("#players").val();
+		var gameMode = $("#gameMode").val();
+		var privateId = $("#privateId").val();
+		var isFree = $("#isFree").val();
+		var joinPrivateRoom={
+			userId: '1',
+			roomId:'5',
+			players:'2',
+			value:'100',
+			color: 'red',
+			type: 'Real',
+			gameMode: 'Classic',
+			isFree: isFree,
+			tableId: privateId,
+		};
+		socket.emit("joinPrivateRoom",joinPrivateRoom);
+	}
+
+
+	//add user
+	function joinRoom()
+	{
+		$("#div1").hide();
+		$("#div2").show();
+		var color = $("#color").val();
+		var type = $("#type").val();
+		var players = $("#players").val();
+		var tableId = $("#tableId").val();
+		var gameMode = $("#gameMode").val();
+		var joinRoomData={
+			userId: $("#userId").val(),
+			roomId:1,
+			players:4,
+			value:'200',
+			color: 'red',
+			type: 'Real',
+			gameMode: gameMode,
+		};
+		$(".jRoom").hide();
+		socket.emit("joinRoom",joinRoomData);
+	}
+	//foldFunction
+	//getPrivateRoomDetails
+	
+	socket.on("startRoundWaiting",function(data){
+		console.log("startRoundWaiting"+data);
+		$("#timerName").html('startRoundWaiting');
+		$("#timmer").html(data);
+	});
+	socket.on("diceResult",function(data){
+		console.log(data)
+		$("#diceResult").html(data.diceNumber);
+		
+	});
+	socket.on("rollDiceTimer",function(data){
+		$("#timerName").html('rollDiceTimer');
+		$("#timmer").html(data);
+	});
+	
+	socket.on("playerObject",function(data){
+		$(".fourToken").show();
+		$("#trName").html('');		
+		$("#tr2Name").html('');
+		var players = $("#players").val();
+		var userId = $("#userId").val();
+
+		if(data.length ==players)
+		{
+			$("#dice").show();
+		}
+		for (let i = 0; i < data.length; i++) {		
+			if(data[i].userId==userId){
+				var tr2 ='<tr><td><button style="background-color:blue;color:white;"  >'+data[i].userId+' ('+data[i].playerIndex+')</button> <button style="background-color:'+data[i].tokenColor+';color:'+data[i].tokenColor+';"  >###</button></td>';
+			}else{
+				var tr2 ='<tr><td><button style="background-color:red;color:white;"  >'+data[i].userId+'  ('+data[i].playerIndex+')</button> <button style="background-color:'+data[i].tokenColor+';color:'+data[i].tokenColor+';"  >###</button></td>';
+			}
+			for (let j = 0; j < data[i].fourToken.length; j++) {
+				if(data[i].userId==userId){
+					tr2 += '<td> <button onclick="moveToken('+data[i].fourToken[j].tokenIndex+',\''+data[i].fourToken[j].status+'\')" class="btn btn-primary btn-sm" style="background-color:black;color:white;">'+data[i].fourToken[j].tokenIndex+' '+data[i].fourToken[j].status+' ('+data[i].fourToken[j].postion+') ('+data[i].fourToken[j].globlePostion+') ('+data[i].fourToken[j].zone+')</button> </td>';
+				}else{
+					tr2 += '<td> <button " class="btn btn-primary btn-sm" style="background-color:blue;color:white;">'+data[i].fourToken[j].tokenIndex+' '+data[i].fourToken[j].status+' ('+data[i].fourToken[j].postion+') ('+data[i].fourToken[j].globlePostion+') ('+data[i].fourToken[j].zone+')</button> </td>';
+				}
+								
+			}
+			if(data[i].isturn==true){
+				var turn='Trun';
+				var onclick ='diceRoll()';
+			}else{
+				var turn='';
+				var onclick='';
+			}
+			tr2 +='<td><button style="background-color:blue;color:white;" '+onclick+' >'+turn+'</button></td></tr>';
+			$("#tr2Name").append(tr2);
+		
+		}
+		
+	
+	});
+
+	socket.on("diceResult",function(data){
+		console.log("diceResult"+data);
+		$("#diceResult").html(data.diceNumber);
+		$("#isReturn").html(data.isReturn);
+		
+	});
+	socket.on("gameOverTime",function(data){
+		console.log("gameOverTime"+data);
+		
+		
+	});
+
+
+	function moveToken(tokenIndex,status){
+		
+		var data={
+			status:status,
+			tokenIndex:tokenIndex
+		}
+		socket.emit("moveToken",data);
+	}
+</script>
+</html>
